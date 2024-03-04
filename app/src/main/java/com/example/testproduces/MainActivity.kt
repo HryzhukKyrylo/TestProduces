@@ -1,68 +1,127 @@
 package com.example.testproduces
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import com.example.testproduces.di.component.AppComponent
 import com.example.testproduces.di.component.DaggerAppComponent
+import com.example.testproduces.di.module.AppModule
 import com.example.testproduces.ui.theme.TestProducesTheme
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 class MainActivity : ComponentActivity() {
     private lateinit var appComponent: AppComponent
+    lateinit var sp: SharedPreferences
     override fun onCreate(savedInstanceState: Bundle?) {
-        appComponent = DaggerAppComponent.create()
+        appComponent = DaggerAppComponent.builder()
+            .appModule(AppModule(application))
+            .build()
         super.onCreate(savedInstanceState)
-        Futures.addCallback(appComponent.testStr,object : FutureCallback<String>{
-            override fun onSuccess(result: String?) {
-                Log.d("TESTTEST", "onSuccess: result - $result")
-            }
-
-            override fun onFailure(t: Throwable) {
-                Log.d("TESTTEST", "onFailure: result error")
-            }
-        },
-            Executors.newCachedThreadPool()
-        )
+        addCallbeck()
         setContent {
+            var editText by remember {
+                mutableStateOf("")
+            }
+            var savedText by remember {
+                mutableStateOf("")
+            }
             TestProducesTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    Column {
+
+                        Text(text = "your text - $savedText")
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        TextField(
+                            modifier = Modifier.fillMaxWidth(),
+                            value = editText,
+                            onValueChange = {
+                                editText = it
+                            })
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly
+                        ) {
+                            Button(onClick = {
+                                savedText = sp.getString("edit_text", "") ?: ""
+                            }) {
+                                Text(text = "show text")
+                            }
+
+                            Button(onClick = {
+                                sp.edit(true) {
+                                    putString("edit_text", editText)
+                                }
+                            }) {
+                                Text(text = "save text")
+                            }
+                        }
+                    }
+
                 }
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    private fun addCallbeck() {
+        Futures.addCallback(
+            appComponent.sp, object : FutureCallback<SharedPreferences> {
+                override fun onSuccess(result: SharedPreferences?) {
+                    if (result != null) {
+                        sp = result
+                    }
+                }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    TestProducesTheme {
-        Greeting("Android")
+                override fun onFailure(t: Throwable) {
+                    Log.d("TESTTEST", "onFailure: sp")
+                }
+            },
+            Executors.newCachedThreadPool()
+        )
+        Futures.addCallback(
+            appComponent.testStr, object : FutureCallback<String> {
+                override fun onSuccess(result: String?) {
+                    Log.d("TESTTEST", "onSuccess: testFirstStr - $result")
+                }
+
+                override fun onFailure(t: Throwable) {
+                    Log.d("TESTTEST", "onFailure: str")
+                }
+            },
+            Executors.newCachedThreadPool()
+        )
     }
 }

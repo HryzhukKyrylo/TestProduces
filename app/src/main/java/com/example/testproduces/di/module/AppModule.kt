@@ -3,22 +3,21 @@ package com.example.testproduces.di.module
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
-import com.google.common.util.concurrent.Futures
-import com.google.common.util.concurrent.ListenableFuture
-import dagger.Binds
 import dagger.producers.ProducerModule
 import dagger.producers.Produces
-import dagger.producers.Production
 
 @ProducerModule
-class AppModule {
+class AppModule(private val application: Application) {
 
-//    @Produces
-//    fun produceStr(): ListenableFuture<String> {
-//        return Futures.immediateFuture("test_str")
-//    }
     @Produces
-    fun produceStr(): String {
-        return "test_str"
+    fun produceSharedPreferences(): SharedPreferences {
+        val sp = application.getSharedPreferences("test_shared_preferences", Context.MODE_PRIVATE)
+        return sp
+    }
+
+    @Produces
+    fun produceStr(sp: SharedPreferences): String {
+        val str = sp.getString("edit_text", "") ?: ""
+        return str
     }
 }
