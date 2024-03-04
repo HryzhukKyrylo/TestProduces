@@ -99,4 +99,9 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("testtest", "MainActivity.onCreate: ${System.currentTimeMillis()}")
+    }
 }
