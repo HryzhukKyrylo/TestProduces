@@ -3,20 +3,22 @@ package com.example.testproduces.di.module
 import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
+import dagger.Module
+import dagger.Provides
 import dagger.producers.ProducerModule
 import dagger.producers.Produces
 
-@ProducerModule
+@Module
 class AppModule(private val application: Application) {
 
-    @Produces
-    fun produceSharedPreferences(): SharedPreferences {
+    @Provides
+    fun provideSharedPreferences(): SharedPreferences {
         val sp = application.getSharedPreferences("test_shared_preferences", Context.MODE_PRIVATE)
         return sp
     }
 
-    @Produces
-    fun produceStr(sp: SharedPreferences): String {
+    @Provides
+    fun provideStr(sp: SharedPreferences): String {
         val str = sp.getString("edit_text", "") ?: ""
         return str
     }

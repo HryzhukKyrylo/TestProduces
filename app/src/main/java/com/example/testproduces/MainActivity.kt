@@ -32,16 +32,20 @@ import com.example.testproduces.ui.theme.TestProducesTheme
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
 import java.util.concurrent.Executors
+import javax.inject.Inject
 
 class MainActivity : ComponentActivity() {
     private lateinit var appComponent: AppComponent
+
+    @Inject
     lateinit var sp: SharedPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         appComponent = DaggerAppComponent.builder()
             .appModule(AppModule(application))
             .build()
+        appComponent.inject(this)
         super.onCreate(savedInstanceState)
-        addCallbeck()
         setContent {
             var editText by remember {
                 mutableStateOf("")
@@ -94,34 +98,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    private fun addCallbeck() {
-        Futures.addCallback(
-            appComponent.sp, object : FutureCallback<SharedPreferences> {
-                override fun onSuccess(result: SharedPreferences?) {
-                    if (result != null) {
-                        sp = result
-                    }
-                }
-
-                override fun onFailure(t: Throwable) {
-                    Log.d("TESTTEST", "onFailure: sp")
-                }
-            },
-            Executors.newCachedThreadPool()
-        )
-        Futures.addCallback(
-            appComponent.testStr, object : FutureCallback<String> {
-                override fun onSuccess(result: String?) {
-                    Log.d("TESTTEST", "onSuccess: testFirstStr - $result")
-                }
-
-                override fun onFailure(t: Throwable) {
-                    Log.d("TESTTEST", "onFailure: str")
-                }
-            },
-            Executors.newCachedThreadPool()
-        )
     }
 }
